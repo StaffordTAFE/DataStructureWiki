@@ -8,6 +8,15 @@ namespace WikiForm
 {
     internal static class Program
     {
-        //TestPush
+        /// <summary>
+        /// The main entry point for the application.
+        /// </summary>
+        [STAThread]
+        static void Main()
+        {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new WikiForm());
+        }
     }
 }
