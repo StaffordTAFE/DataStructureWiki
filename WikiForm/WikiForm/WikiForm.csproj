@@ -46,16 +46,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConfirmBox.cs" />
-    <Compile Include="FileBrowser.cs" />
-    <Compile Include="SaveSystem.cs" />
+    <Compile Include="Scripts\ConfirmBox.cs" />
+    <Compile Include="Scripts\FileBrowser.cs" />
+    <Compile Include="Scripts\SaveSystem.cs" />
     <Compile Include="WikiForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="WikiForm.Designer.cs">
       <DependentUpon>WikiForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Program.cs" />
+    <Compile Include="Scripts\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
