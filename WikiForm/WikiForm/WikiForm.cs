@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
@@ -13,27 +12,36 @@ namespace WikiForm
         static readonly int rows = 12;
         static readonly int columns = 4;
 
-        string[,] wikiTable = new string[rows, columns];
+        private string[,] wikiTable = new string[rows, columns];
+
+        // current selected index
+        private int selectedRecord;
+
+        // dummy value
+        private readonly string placeholder = "--";
 
         // save cache
-        string[,] wikiTableCache = new string[rows, columns];
+        private bool modified = false;
 
         // display variables
-        List<string> displayList = new List<string>(); // create list for name variables
-        List<int> indexCache = new List<int>();
+        //List<string> displayList = new List<string>(); // create list for name variables
 
         //instance save system
-        SaveSystem saveSystem = new SaveSystem();
+        private readonly SaveSystem saveSystem = new SaveSystem();
 
         // search value
-        string search;
+        private string search;
+
+        // Form properties
         public WikiForm()
         {
             InitializeComponent();
 
             deleteToolStripMenuItem.Enabled = false; // disabled on start
+
+            DisplayRecords();
         }
-        
+
 
         //
         // Misc UI functions
@@ -41,23 +49,20 @@ namespace WikiForm
 
         private void DisplayRecords()
         {
-            int index = recordListBox.SelectedIndex;
+            int index = selectedRecord;
 
             //
-            // Rearrange list to remove gaps
+            // Placeholder value
             //
 
-            for (int r = 1; r < rows; r++) // for each row, Ignore first record
+            for (int i = 0; i < rows; i++)
             {
-                if (wikiTable[r - 1, 0] == null) // check if the record above is empty
+                if (wikiTable[i, 0] == null || wikiTable[i, 0] == "") // check if the record above is empty
                 {
-                    for (int c = 0; c < columns; c++) // if true shift record up
-                    {
-                        wikiTable[r - 1, c] = wikiTable[r, c];
-                        wikiTable[r, c] = null;
-                    }
+                    wikiTable[i, 0] = placeholder;
                 }
             }
+
 
             //
             // Sort table
@@ -69,50 +74,66 @@ namespace WikiForm
             // Display records
             //
 
-            recordListBox.Items.Clear(); // remove old values
-            displayList.Clear();
-            indexCache.Clear();
+            List<string> displayName = new List<string>(); // create a list to display names
+            List<string> displayCategory = new List<string>(); // create a list to display category
 
-            for (int i = 0; i < rows; i++) // populate list
+            for (int r = 0; r < rows; r++)
             {
-                displayList.Add(wikiTable[i, 0]);
-                indexCache.Add(i); // store the index of the item in the 2d array
-            }
-
-            for (int i = displayList.Count - 1; i > -1; i--) // for each record, starting at last record
-            {
-                if (search != "" && search != null && displayList[i] != null)
+                try
                 {
-                    if (!new Regex(search, RegexOptions.IgnoreCase).Match(displayList[i]).Success) // regex check for search criteria
-                    {
-                        displayList.RemoveAt(i); // remove if search criteria is not met
-                        indexCache.RemoveAt(i);
-                    }
-                    else
-                    {
-                        string.Concat(displayList[i], indexCache[i]);
-                    }
+                    displayCategory.Add(wikiTable[r, 1]);
+                    displayName.Add(wikiTable[r, 0]);
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e);
                 }
             }
 
 
-            try // ignore if displayList is empty
+            try // ignore if listview is empty
             {
-                recordListBox.Items.AddRange(displayList.ToArray()); // add name variables to the listview
+                RecordView.Items.Clear();
+
+                for (int i = 0; i < rows; i++)
+                {
+                    if (wikiTable[i, 0] != placeholder)
+                    {
+                        ListViewItem lvi = new ListViewItem(wikiTable[i, 0]);
+                        lvi.SubItems.Add(wikiTable[i, 1]);
+                        RecordView.Items.Add(lvi);
+                    }
+                }
             }
             catch (Exception e)
             {
-                Debug.WriteLine($"Failed to populate listview: {e}");
+                Debug.WriteLine(e);
+            }
+
+            try
+            {
+                RecordView.Items[index].Selected = true;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
             }
         }
         private void UpdateFields() // fill information into text boxes
         {
-            if (recordListBox.SelectedIndex != -1)
+            if (selectedRecord != -1)
             {
-                name.Text = wikiTable[indexCache[recordListBox.SelectedIndex], 0];
-                category.Text = wikiTable[indexCache[recordListBox.SelectedIndex], 1];
-                structure.Text = wikiTable[indexCache[recordListBox.SelectedIndex], 2];
-                definition.Text = wikiTable[indexCache[recordListBox.SelectedIndex], 3];
+                if (wikiTable[selectedRecord, 0] == placeholder)
+                {
+                    name.Text = "";
+                }
+                else
+                {
+                    name.Text = wikiTable[selectedRecord, 0];
+                }
+                category.Text = wikiTable[selectedRecord, 1];
+                structure.Text = wikiTable[selectedRecord, 2];
+                definition.Text = wikiTable[selectedRecord, 3];
             }
         }
         private void ClearFields() // clear fields
@@ -122,50 +143,35 @@ namespace WikiForm
             category.Clear();
             definition.Clear();
         }
-        private void recordListBox_SelectedIndexChanged(object sender, EventArgs e) // called when record is selected
+        private void RecordView_SelectedIndexChanged(object sender, EventArgs e)
         {
+            foreach (int index in RecordView.SelectedIndices)
+            {
+                selectedRecord = index;
+            }
             UpdateFields();
-
-            if (recordListBox.SelectedIndex == -1) // enable or disable delete button if record is selected or not. Clear text boxes when nothing is selected
-            {
-                deleteToolStripMenuItem.Enabled = false;
-                ClearFields();
-            }
-            else
-            {
-                deleteToolStripMenuItem.Enabled = true;
-            }
-        }
-        private bool CompareRecords(string entry1, string entry2) // Compare by alphabetical and return if they are out of order
-        {
-            if (string.Compare(entry1, entry2) > 0)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
         }
         private string[,] SortTable(string[,] table) // logic to sort the records
         {
             while (true)
             {
+                bool iterate = false;
+
                 for (int i = 1; i < rows; i++) // for each row, ignore first row
                 {
-                    if (table[i, 0] != null && table[i - 1, 0] != null) // make sure that there is a record
+                    if (table[i, 0] != placeholder && table[i - 1, 0] != placeholder) // make sure that there is a record
                     {
-                        bool swapRecords = CompareRecords(table[i - 1, 0], table[i, 0]); // compare record to record above
-
-                        if (swapRecords)
+                        if (string.Compare(table[i - 1, 0], table[i, 0], true) > 0)
                         {
+                            iterate = true;
+
                             // store first record
                             string index0 = table[i - 1, 0];
                             string index1 = table[i - 1, 1];
                             string index2 = table[i - 1, 2];
                             string index3 = table[i - 1, 3];
 
-                            for (int a = 0; a < 4; a++) // move record 2 up one space
+                            for (int a = 0; a < columns; a++) // move record 2 up one space
                             {
                                 table[i - 1, a] = table[i, a];
                             }
@@ -174,22 +180,6 @@ namespace WikiForm
                             table[i, 1] = index1;
                             table[i, 2] = index2;
                             table[i, 3] = index3;
-                        }
-                    }
-                }
-
-                // iterate through while until all records have been swapped correctly
-                bool iterate = false;
-
-                for (int i = 1; i < rows; i++) // for each row, ignore first row
-                {
-                    if (table[i, 0] != null && table[i - 1, 0] != null) // make sure that there is a record
-                    {
-                        bool swapRecords = CompareRecords(table[i - 1, 0], table[i, 0]); // compare records
-
-                        if (swapRecords)
-                        {
-                            iterate = true; 
                         }
                     }
                 }
@@ -203,18 +193,18 @@ namespace WikiForm
         }
         protected override void OnFormClosing(FormClosingEventArgs e) // check if table has been saved and prompt user
         {
-            if (wikiTable != wikiTableCache) // if table has been changed
+            if (modified) // if table has been changed
             {
                 ConfirmBox exitConfirm = new ConfirmBox();
 
-                if (!exitConfirm.QueryConfirmation("Unsaved data", "Exit without saving?", "Yes","No"))
+                if (!exitConfirm.QueryConfirmation("Unsaved data", "Exit without saving?", "Yes", "No"))
                 {
                     e.Cancel = true;
                 }
             }
         }
-        
-        
+
+
         //
         // Text field logic
         //
@@ -232,33 +222,37 @@ namespace WikiForm
         // leave focus
         private void name_Leave(object sender, EventArgs e)
         {
-            if (recordListBox.SelectedIndex != -1) // make sure something is selected
+            if (selectedRecord != -1) // make sure something is selected
             {
-                int index = recordListBox.SelectedIndex;
-                wikiTable[indexCache[recordListBox.SelectedIndex], 0] = name.Text; // save value into table
+                wikiTable[selectedRecord, 0] = name.Text; // save value into table
+                modified = true;
                 DisplayRecords();
-                recordListBox.SetSelected(index, true); // reselect record after refresh
             }
         }
         private void category_Leave(object sender, EventArgs e)
         {
-            if (recordListBox.SelectedIndex != -1) // make sure something is selected
+            if (selectedRecord != -1) // make sure something is selected
             {
-                wikiTable[indexCache[recordListBox.SelectedIndex], 1] = category.Text; // save value into table
+                wikiTable[selectedRecord, 1] = category.Text; // save value into table
+                modified = true;
+                DisplayRecords();
             }
         }
         private void structure_Leave(object sender, EventArgs e)
         {
-            if (recordListBox.SelectedIndex != -1) // make sure something is selected
+            if (selectedRecord != -1) // make sure something is selected
             {
-                wikiTable[indexCache[recordListBox.SelectedIndex], 2] = structure.Text; // save value into table
+                wikiTable[selectedRecord, 2] = structure.Text; // save value into table
+                modified = true;
             }
         }
         private void definition_Leave(object sender, EventArgs e)
         {
-            if (recordListBox.SelectedIndex != -1) // make sure something is selected
+            if (selectedRecord != -1) // make sure something is selected
             {
-                wikiTable[indexCache[recordListBox.SelectedIndex], 3] = definition.Text; // save value into table
+                definition.Text = definition.Text.ToString(); // removes formatting
+                wikiTable[selectedRecord, 3] = definition.Text; // save value into table
+                modified = true;
             }
         }
 
@@ -266,15 +260,108 @@ namespace WikiForm
         private void searchBox_TextChanged(object sender, EventArgs e)
         {
             search = searchBox.Text;
-            DisplayRecords();
+        }
+        private void searchButton_Click(object sender, EventArgs e)
+        {
+            if (search != null)
+            {
+                BinarySearch(search.ToString(), wikiTable);
+            }
         }
         private void searchBox_KeyPress(object sender, KeyPressEventArgs e) // filter search characters
         {
-            var regex = new Regex(@"[^a-zA-Z0-9\b\s]");
+            var regex = new Regex(@"[^a-zA-Z0-9-\b\s]");
             if (regex.IsMatch(e.KeyChar.ToString()))
             {
                 e.Handled = true;
             }
+
+            if (e.KeyChar == (char)13 && search != null) // if hit enter
+            {
+                e.Handled = true;
+                BinarySearch(search.ToString(), wikiTable);
+            }
+        }
+        private void BinarySearch(string searchCriteria, string[,] table)
+        {
+            int mid;
+            int first = 0;
+            int last = table.GetLength(0);
+
+            for (int i = 0; i < rows; i++) // for each row
+            {
+                if (wikiTable[i, 0] == placeholder) // if value is blank move last back to where there is a record
+                {
+                    last--;
+                }
+            }
+
+            while (first <= last)
+            {
+                mid = (first + last) / 2;
+
+                try
+                {
+                    if (string.Compare(searchCriteria, table[mid, 0], true) > 0)
+                    {
+                        first = mid + 1;
+                    }
+                    else if (string.Compare(searchCriteria, table[mid, 0], true) < 0)
+                    {
+                        last = mid - 1;
+                    }
+                    else
+                    {
+                        RecordView.Items[mid].Selected = true;
+                        break;
+                    }
+
+
+                    // TODO change to if
+                    /*                    switch (string.Compare(searchCriteria, table[mid, 0], true))
+                                        {
+                                            case 0:
+                                                RecordView.Items[mid].Selected = true;
+                                                return;
+
+                                            case -1:
+                                                last = mid - 1;
+                                                break;
+
+                                            case 1:
+                                                first = mid + 1;
+                                                break;
+                                        }*/
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e);
+
+                    status.Text = "Failed to find a match";
+
+                    return;
+                }
+            }
+
+
+            // Linear search function
+            // I cant bring myself to delete it, I spent way too much time getting this to work. :(
+
+            /* for (int i = displayList.Count - 1; i > -1; i--) // for each record, starting at last record
+             {
+                 if (search != "" && search != null && displayList[i] != null)
+                 {
+                     if (!new Regex(search, RegexOptions.IgnoreCase).Match(displayList[i]).Success) // regex check for search criteria
+                     {
+                         displayList.RemoveAt(i); // remove if search criteria is not met
+                         indexCache.RemoveAt(i);
+                     }
+                     else
+                     {
+                         string.Concat(displayList[i], indexCache[i]);
+                     }
+                 }
+             }*/
         }
 
         // navigation controls
@@ -318,7 +405,7 @@ namespace WikiForm
             {
                 saveSystem.Save(wikiTable, saveFile);
                 status.Text = "Successfully saved wiki";
-                wikiTableCache = wikiTable;
+                modified = false;
             }
         }
         private void loadToolStripMenuItem_Click(object sender, EventArgs e)
@@ -332,7 +419,7 @@ namespace WikiForm
                 wikiTable = saveSystem.Load(loadFile);
                 DisplayRecords();
                 status.Text = "Successfully loaded wiki";
-                wikiTableCache = wikiTable;
+                modified = false;
             }
         }
         private void addToolStripMenuItem_Click(object sender, EventArgs e) // add record
@@ -341,12 +428,14 @@ namespace WikiForm
 
             for (int i = 0; i < rows; i++)
             {
-                if (wikiTable[i,0] == null)
+                if (wikiTable[i, 0] == placeholder)
                 {
-                    wikiTable[i, 0] = defaultName; // enter data into table
+                    wikiTable[i, 0] = defaultName;
+                    modified = true;
                     break;
                 }
             }
+
             DisplayRecords();
 
             status.Text = "Added record";
@@ -354,21 +443,25 @@ namespace WikiForm
         private void deleteToolStripMenuItem_Click(object sender, EventArgs e) // delete record
         {
             ConfirmBox confirmationBox = new ConfirmBox();
-
-            if (confirmationBox.QueryConfirmation("Confirm Delete", "Are you sure?", "Delete", "Cancel"))
+            if (wikiTable[selectedRecord, 0] != placeholder)
             {
-                for (int i = 0; i < columns; i++) // clear record
+                if (confirmationBox.QueryConfirmation("Confirm Delete", "Are you sure?", "Delete", "Cancel"))
                 {
-                    if (recordListBox.SelectedIndex != -1) // if record is selected
+                    for (int i = 0; i < columns; i++) // clear record
                     {
-                        wikiTable[indexCache[recordListBox.SelectedIndex], i] = null;
+                        if (selectedRecord != -1) // if record is selected
+                        {
+                            wikiTable[selectedRecord, i] = null;
+                        }
                     }
-                }
-                DisplayRecords();
-                ClearFields();
-                deleteToolStripMenuItem.Enabled = false;
 
-                status.Text = "Removed record";
+                    modified = true;
+
+                    DisplayRecords();
+                    ClearFields();
+
+                    status.Text = "Removed record";
+                }
             }
         }
     }

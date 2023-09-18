@@ -1,5 +1,4 @@
 C:\Users\benja\Source\Repos\StaffordTAFE\DataStructureWiki\WikiForm\WikiForm\obj\Debug\WikiForm.csproj.AssemblyReference.cache
-C:\Users\benja\Source\Repos\StaffordTAFE\DataStructureWiki\WikiForm\WikiForm\obj\Debug\WikiForm.csproj.SuggestedBindingRedirects.cache
 C:\Users\benja\Source\Repos\StaffordTAFE\DataStructureWiki\WikiForm\WikiForm\obj\Debug\WikiForm.Properties.Resources.resources
 C:\Users\benja\Source\Repos\StaffordTAFE\DataStructureWiki\WikiForm\WikiForm\obj\Debug\WikiForm.WikiForm.resources
 C:\Users\benja\Source\Repos\StaffordTAFE\DataStructureWiki\WikiForm\WikiForm\obj\Debug\WikiForm.csproj.GenerateResource.cache
@@ -9,3 +8,9 @@ C:\Users\benja\Source\Repos\StaffordTAFE\DataStructureWiki\WikiForm\WikiForm\bin
 C:\Users\benja\Source\Repos\StaffordTAFE\DataStructureWiki\WikiForm\WikiForm\bin\Debug\WikiForm.pdb
 C:\Users\benja\Source\Repos\StaffordTAFE\DataStructureWiki\WikiForm\WikiForm\obj\Debug\WikiForm.exe
 C:\Users\benja\Source\Repos\StaffordTAFE\DataStructureWiki\WikiForm\WikiForm\obj\Debug\WikiForm.pdb
+C:\Users\benja\source\repos\StaffordTAFE\DataStructureWiki\WikiForm\WikiForm\bin\Debug\en-AU\WikiForm.resources.dll
+C:\Users\benja\source\repos\StaffordTAFE\DataStructureWiki\WikiForm\WikiForm\bin\Debug\en\WikiForm.resources.dll
+C:\Users\benja\source\repos\StaffordTAFE\DataStructureWiki\WikiForm\WikiForm\obj\Debug\WikiForm.WikiForm.en-AU.resources
+C:\Users\benja\source\repos\StaffordTAFE\DataStructureWiki\WikiForm\WikiForm\obj\Debug\WikiForm.WikiForm.en.resources
+C:\Users\benja\source\repos\StaffordTAFE\DataStructureWiki\WikiForm\WikiForm\obj\Debug\en-AU\WikiForm.resources.dll
+C:\Users\benja\source\repos\StaffordTAFE\DataStructureWiki\WikiForm\WikiForm\obj\Debug\en\WikiForm.resources.dll

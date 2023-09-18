@@ -66,6 +66,12 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="WikiForm.en-AU.resx">
+      <DependentUpon>WikiForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="WikiForm.en.resx">
+      <DependentUpon>WikiForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="WikiForm.resx">
       <DependentUpon>WikiForm.cs</DependentUpon>
     </EmbeddedResource>
