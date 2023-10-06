@@ -48,7 +48,6 @@
   <ItemGroup>
     <Compile Include="Scripts\ConfirmBox.cs" />
     <Compile Include="Scripts\FileBrowser.cs" />
-    <Compile Include="Scripts\SaveSystem.cs" />
     <Compile Include="WikiForm.cs">
       <SubType>Form</SubType>
     </Compile>

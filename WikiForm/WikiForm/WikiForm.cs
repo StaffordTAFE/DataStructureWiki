@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
@@ -25,9 +26,6 @@ namespace WikiForm
 
         // display variables
         //List<string> displayList = new List<string>(); // create list for name variables
-
-        //instance save system
-        private readonly SaveSystem saveSystem = new SaveSystem();
 
         // search value
         private string search;
@@ -315,23 +313,6 @@ namespace WikiForm
                         RecordView.Items[mid].Selected = true;
                         break;
                     }
-
-
-                    // TODO change to if
-                    /*                    switch (string.Compare(searchCriteria, table[mid, 0], true))
-                                        {
-                                            case 0:
-                                                RecordView.Items[mid].Selected = true;
-                                                return;
-
-                                            case -1:
-                                                last = mid - 1;
-                                                break;
-
-                                            case 1:
-                                                first = mid + 1;
-                                                break;
-                                        }*/
                 }
                 catch (Exception e)
                 {
@@ -403,7 +384,7 @@ namespace WikiForm
 
             if (saveFile != "")
             {
-                saveSystem.Save(wikiTable, saveFile);
+                Save(wikiTable, saveFile);
                 status.Text = "Successfully saved wiki";
                 modified = false;
             }
@@ -416,7 +397,7 @@ namespace WikiForm
 
             if (loadFile != "")
             {
-                wikiTable = saveSystem.Load(loadFile);
+                Load(loadFile);
                 DisplayRecords();
                 status.Text = "Successfully loaded wiki";
                 modified = false;
@@ -464,5 +445,75 @@ namespace WikiForm
                 }
             }
         }
+
+        /// <summary>
+        /// Save function
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="filePath"></param>
+        public void Save(string[,] data, string filePath)
+        {
+            using (FileStream fileStream = new FileStream(filePath, FileMode.OpenOrCreate))
+            {
+                using (BinaryWriter binaryWriter = new BinaryWriter(fileStream))
+                {
+                    for (int r = 0; r < rows; r++)
+                    {
+                        for (int c = 0; c < columns; c++)
+                        {
+                            binaryWriter.Write(data[r, c]);
+                        }
+                    }
+                }
+            }
+
+
+            // Old save function
+            /*            if (!File.Exists(filePath)) // if file doesnt exist, create it
+                        {
+                            var newFile = File.Create(filePath);
+                            newFile.Close();
+                        }
+
+                        Byte[] byteData = SerializeData(data);
+
+                        File.WriteAllBytes(filePath, byteData);*/
+        }// save file
+
+        /// <summary>
+        /// Load File
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        private void Load(string filePath)
+        {
+            using (FileStream fileStream = new FileStream(filePath, FileMode.Open))
+            {
+                using (BinaryReader binaryReader = new BinaryReader(fileStream))
+                {
+                    while (binaryReader.BaseStream.Position < binaryReader.BaseStream.Length)
+                    {
+                        for (int r = 0; r < rows; r++)
+                        {
+                            for (int c = 0; c < columns; c++)
+                            {
+                                wikiTable[r, c] = binaryReader.ReadString();
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Old load function
+
+            /*Byte[] byteData = File.ReadAllBytes(filePath);
+
+            BinaryFormatter bf = new BinaryFormatter();
+
+            using (MemoryStream ms = new MemoryStream(byteData))
+            {
+                return bf.Deserialize(ms) as string[,];
+            }*/
+        }// load file
     }
 }
